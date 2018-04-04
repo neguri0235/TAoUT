@@ -29,12 +29,11 @@ public:
 		}
 	}
 };
-
 FileName fileName;
 
-//step4. 테스트 대상 클래스에 stub을 주입
-// 새로운 파일로. LogAnalyzer3_4_3.h
 
+
+// 의존성 주입을 취해서 Factory class를 사용
 
 class IExtensionManager {
 public:
@@ -50,31 +49,56 @@ public:
 	}
 };
 
-class StubExtensionManager : public IExtensionManager {
-
+class stubFalseManager : public IExtensionManager {
 public:
-	bool ShouldExtesionBeValid;
-
 	bool IsValid(std::string& fn) {
-		return ShouldExtesionBeValid;
+		std::cout<<"subFalseManager"<<std::endl;
+		return false;
 	}
 };
 
-class LogAnalyzer {
-protected:
-	std::shared_ptr<IExtensionManager> manager;
+
+class stubTrueManager : public IExtensionManager {
 public:
-	LogAnalyzer() {
-		 manager = std::make_shared<FileExtensionManager>();
+	bool IsValid(std::string& fn) {
+		std::cout<<"subTrueManager"<<std::endl;
+		return true;
+	}
+};
+
+
+class ExtensionManagerFactory {
+private:
+	std::shared_ptr<IExtensionManager> customManager = nullptr;
+public:
+	std::shared_ptr<IExtensionManager> Create() {
+		if(customManager == nullptr){
+			customManager = std::make_shared<FileExtensionManager>();
+		}
+		return customManager;
 	}
 
-	LogAnalyzer(std::shared_ptr<IExtensionManager> mgr) {
-		manager = mgr;
+	void setManager(std::shared_ptr<IExtensionManager> mgr) {
+		customManager = mgr;
+	}
+};
+
+// Factory class를 위해서 여기에 선언함.
+// 좀더 스마트한 방법이 있어야 하는데.
+ExtensionManagerFactory managerFactory;
+
+class LogAnalyzer{
+private:
+	std::shared_ptr<IExtensionManager> manager = nullptr;
+public:
+	LogAnalyzer(){
+		manager = managerFactory.Create();
 	}
 
 	bool IsValidLogfileName(string& filename) {
 		return manager->IsValid(filename);
 	}
+
 };
 
 
